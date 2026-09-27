@@ -1,33 +1,10 @@
-/*
- * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.txt>.
- */
-
 package com.movtery.zalithlauncher.ui.screens.content.elements
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -40,20 +17,15 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,25 +35,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.setting.AllSettings
-import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
-import com.movtery.zalithlauncher.ui.theme.cardColor
-import com.movtery.zalithlauncher.ui.theme.onCardColor
-import kotlinx.coroutines.delay
+import com.movtery.zalithlauncher.ui.theme.backgroundColor
+import com.movtery.zalithlauncher.ui.theme.onBackgroundColor
 
-private val CollapsedWidth = 56.dp
-private val ExpandedWidth = 110.dp
+private val MenuWidth = 264.dp
+private val GlassShape = RoundedCornerShape(30.dp)
+private val RowShape = RoundedCornerShape(18.dp)
 
 @Composable
 fun SideBar(
@@ -91,178 +60,272 @@ fun SideBar(
     onVersionsClick: () -> Unit,
     onInfoClick: () -> Unit
 ) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
+    if (!isVisible) return
 
-    val contentOffset by animateDpAsState(
-        targetValue = if (expanded) 0.dp else (CollapsedWidth - ExpandedWidth),
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "sidebarOffset"
-    )
+    var expanded by rememberSaveable { mutableStateOf(false) }
 
     Box(
         modifier = modifier
-            .width(ExpandedWidth)
             .fillMaxHeight()
-            .padding(vertical = 8.dp)
+            .padding(start = 10.dp, top = 12.dp, bottom = 12.dp),
+        contentAlignment = Alignment.CenterStart
     ) {
-        Card(
+        if (expanded) {
+            IosGlassMenu(
+                onCollapse = { expanded = false },
+                onFpsClick = onFpsClick,
+                onVersionsClick = onVersionsClick,
+                onInfoClick = onInfoClick
+            )
+        } else {
+            GlassMenuHandle(
+                onClick = { expanded = true }
+            )
+        }
+    }
+}
+
+@Composable
+private fun IosGlassMenu(
+    onCollapse: () -> Unit,
+    onFpsClick: () -> Unit,
+    onVersionsClick: () -> Unit,
+    onInfoClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .width(MenuWidth)
+            .fillMaxHeight()
+            .clip(GlassShape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.84f),
+                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.80f)
+                    )
+                )
+            )
+            .border(
+                1.dp,
+                Brush.verticalGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.62f),
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
+                        Color.White.copy(alpha = 0.12f)
+                    )
+                ),
+                GlassShape
+            )
+            .padding(horizontal = 12.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .offset(x = contentOffset)
-                .clipToBounds(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = cardColor(),
-                contentColor = onCardColor()
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 5.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(20.dp))
-                    .backgroundGlass(
-                        blur = AllSettings.backgroundBlur.state,
-                        color = cardColor()
-                    )
-                    .padding(vertical = 10.dp)
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.tertiary
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                SideBarMenuContent(
-                    expanded = expanded,
-                    onFpsClick = onFpsClick,
-                    onVersionsClick = onVersionsClick,
-                    onInfoClick = onInfoClick,
-                    modifier = Modifier.align(Alignment.TopCenter)
-                )
-                SideBarToggle(
-                    expanded = expanded,
-                    onClick = { expanded = !expanded },
-                    modifier = Modifier.align(Alignment.CenterEnd)
+                Text(
+                    text = "ZL",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium
                 )
             }
-        }
-    }
-}
 
-@Composable
-private fun SideBarMenuContent(
-    expanded: Boolean,
-    onFpsClick: () -> Unit,
-    onVersionsClick: () -> Unit,
-    onInfoClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    AnimatedVisibility(
-        visible = expanded,
-        enter = fadeIn(animationSpec = tween(250)) +
-            slideInVertically(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) { it / 3 },
-        exit = fadeOut(animationSpec = tween(150)) +
-            slideOutVertically(
-                animationSpec = tween(150)
-            ) { it / 3 },
-        modifier = modifier
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            HorizontalDivider(
+            Column(
                 modifier = Modifier
-                    .padding(horizontal = 14.dp)
-                    .alpha(0.2f)
+                    .weight(1f)
+                    .padding(start = 10.dp)
+            ) {
+                Text(
+                    text = "ZL2+ Liq",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "Liquid Glass",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            GlassIconButton(
+                painter = painterResource(R.drawable.ic_arrow_left_rounded),
+                description = stringResource(R.string.generic_collapse),
+                onClick = onCollapse
             )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            StaggeredItem(delay = 0) {
-                SideBarShortcut(
-                    icon = painterResource(R.drawable.ic_video_settings),
-                    label = stringResource(R.string.game_menu_option_fps_settings),
-                    onClick = onFpsClick
-                )
-            }
-
-            StaggeredItem(delay = 120) {
-                SideBarShortcut(
-                    icon = painterResource(R.drawable.ic_assignment_filled),
-                    label = stringResource(R.string.page_title_version_manage),
-                    onClick = onVersionsClick
-                )
-            }
-
-            StaggeredItem(delay = 180) {
-                SideBarShortcut(
-                    icon = painterResource(R.drawable.ic_info_outlined),
-                    label = stringResource(R.string.about_launcher_title),
-                    onClick = onInfoClick
-                )
-            }
         }
+
+        Spacer(Modifier.height(2.dp))
+
+        GlassSectionLabel("LAUNCHER")
+
+        IosMenuRow(
+            painter = painterResource(R.drawable.ic_video_settings),
+            title = stringResource(R.string.game_menu_option_fps_settings),
+            subtitle = "Graphics & performance",
+            onClick = onFpsClick
+        )
+
+        IosMenuRow(
+            painter = painterResource(R.drawable.ic_assignment_filled),
+            title = stringResource(R.string.page_title_version_manage),
+            subtitle = "Minecraft versions",
+            onClick = onVersionsClick
+        )
+
+        GlassSectionLabel("MORE")
+
+        IosMenuRow(
+            painter = painterResource(R.drawable.ic_info_outlined),
+            title = stringResource(R.string.about_launcher_title),
+            subtitle = "About ZL2+ Liq",
+            onClick = onInfoClick
+        )
+
+        Spacer(Modifier.weight(1f))
+
+        Text(
+            text = "ZL2+ Liq • iOS-inspired",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 3.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+            style = MaterialTheme.typography.labelSmall,
+            fontSize = 10.sp
+        )
     }
 }
 
 @Composable
-private fun StaggeredItem(
-    delay: Int,
-    visible: Boolean = true,
-    content: @Composable () -> Unit
-) {
-    var show by remember { mutableStateOf(!visible) }
-
-    LaunchedEffect(visible) {
-        if (visible) {
-            kotlinx.coroutines.delay(delay.toLong())
-            show = true
-        } else {
-            show = false
-        }
-    }
-
-    AnimatedVisibility(
-        visible = show,
-        enter = fadeIn(animationSpec = tween(200)) +
-            slideInVertically(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) { it },
-        exit = fadeOut(animationSpec = tween(100))
-    ) {
-        content()
-    }
+private fun GlassSectionLabel(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier.padding(start = 8.dp, top = 3.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.72f),
+        style = MaterialTheme.typography.labelSmall,
+        fontSize = 10.sp
+    )
 }
 
 @Composable
-private fun SideBarToggle(
-    expanded: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+private fun IosMenuRow(
+    painter: Painter,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.85f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessHigh
-        ),
-        label = "toggleScale"
+        targetValue = if (pressed) 0.97f else 1f,
+        animationSpec = spring(),
+        label = "iosRowScale"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(scale)
+            .clip(RowShape)
+            .background(
+                MaterialTheme.colorScheme.surfaceContainerHighest.copy(
+                    alpha = if (pressed) 0.72f else 0.48f
+                )
+            )
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.10f),
+                RowShape
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.78f)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painter,
+                contentDescription = null,
+                modifier = Modifier.size(21.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 11.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelLarge
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+            )
+        }
+
+        Icon(
+            painter = painterResource(R.drawable.ic_arrow_right_rounded),
+            contentDescription = null,
+            modifier = Modifier
+                .size(19.dp)
+                .alpha(0.48f)
+        )
+    }
+}
+
+@Composable
+private fun GlassMenuHandle(onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.92f else 1f,
+        animationSpec = spring(),
+        label = "handleScale"
     )
 
     Box(
-        modifier = modifier
-            .size(40.dp)
+        modifier = Modifier
             .scale(scale)
+            .size(width = 48.dp, height = 104.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)
+            )
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.18f),
+                RoundedCornerShape(24.dp)
+            )
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -270,75 +333,21 @@ private fun SideBarToggle(
             ),
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            painter = if (expanded) painterResource(R.drawable.ic_arrow_right_rounded)
-                else painterResource(R.drawable.ic_arrow_left_rounded),
-            contentDescription = if (expanded) "Collapse" else "Expand",
-            modifier = Modifier.size(32.dp),
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-        )
-    }
-}
-
-@Composable
-private fun SideBarShortcut(
-    icon: Painter,
-    label: String,
-    onClick: () -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.9f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessHigh
-        ),
-        label = "shortcutScale"
-    )
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 6.dp)
-            .scale(scale)
-            .shadow(
-                elevation = if (isPressed) 1.dp else 4.dp,
-                shape = RoundedCornerShape(12.dp),
-                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-            )
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            ),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        tonalElevation = if (isPressed) 1.dp else 2.dp,
-        shadowElevation = 0.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
-            Icon(
-                painter = icon,
-                contentDescription = label,
-                modifier = Modifier.size(22.dp),
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            Box(
+                Modifier
+                    .width(4.dp)
+                    .height(24.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.72f))
             )
             Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                fontSize = 10.sp,
-                maxLines = 1
+                text = "›",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.60f),
+                fontSize = 22.sp
             )
         }
     }
