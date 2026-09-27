@@ -163,11 +163,41 @@ private fun IosGlassMenu(
                 )
             }
 
-            GlassIconButton(
-                painter = painterResource(R.drawable.ic_arrow_left_rounded),
-                description = stringResource(R.string.generic_collapse),
-                onClick = onCollapse
+            val collapseInteraction = remember { MutableInteractionSource() }
+            val collapsePressed by collapseInteraction.collectIsPressedAsState()
+            val collapseScale by animateFloatAsState(
+                targetValue = if (collapsePressed) 0.90f else 1f,
+                animationSpec = spring(),
+                label = "collapseScale"
             )
+
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .scale(collapseScale)
+                    .clip(CircleShape)
+                    .background(
+                        MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.62f)
+                    )
+                    .border(
+                        1.dp,
+                        Color.White.copy(alpha = 0.20f),
+                        CircleShape
+                    )
+                    .clickable(
+                        interactionSource = collapseInteraction,
+                        indication = null,
+                        onClick = onCollapse
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_arrow_left_rounded),
+                    contentDescription = stringResource(R.string.generic_collapse),
+                    modifier = Modifier.size(22.dp),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f)
+                )
+            }
         }
 
         Spacer(Modifier.height(2.dp))
